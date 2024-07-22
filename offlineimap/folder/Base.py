@@ -820,12 +820,18 @@ class BaseFolder:
             # If any of the destinations actually stores the message body,
             # load it up.
             if dstfolder.storesmessages():
-                message = self.getmessage(uid)
+
+                try:
+                    message = self.getmessage(uid)
+                except:
+                    return
+
             # Succeeded? -> IMAP actually assigned a UID. If newid
             # remained negative, no server was willing to assign us an
             # UID. If newid is 0, saving succeeded, but we could not
             # retrieve the new UID. Ignore message in this case.
             new_uid = dstfolder.savemessage(uid, message, flags, rtime)
+
             if new_uid > 0:
                 if new_uid != uid:
                     # Got new UID, change the local uid to match the new one.

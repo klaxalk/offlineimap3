@@ -340,12 +340,17 @@ class IMAPFolder(BaseFolder):
                   this UID could be found.
         """
 
-        data = self._fetch_from_imap(str(uid), self.retrycount)
+        try:
+            data = self._fetch_from_imap(str(uid), self.retrycount)
 
-        # Data looks now e.g.
-        # ['320 (17061 BODY[] {2565}',<email.message.EmailMessage object>]
-        # Is a list of two elements. Message is at [1]
-        msg = data[1]
+            # Data looks now e.g.
+            # ['320 (17061 BODY[] {2565}',<email.message.EmailMessage object>]
+            # Is a list of two elements. Message is at [1]
+            msg = data[1]
+
+        except OfflineImapError as e:
+            
+            raise e
 
         if self.ui.is_debugging('imap'):
             # Optimization: don't create the debugging objects unless needed
@@ -660,10 +665,12 @@ class IMAPFolder(BaseFolder):
         # Message-ID is handy for debugging messages.
         try:
             msg_id = self.getmessageheader(msg, "message-id")
-        except (HeaderParseError, IndexError):
-            msg_id = None
-        if not msg_id:
-            msg_id = '[unknown message-id]'
+
+            if not msg_id:
+                msg_id = '[unknown message-id]'
+
+        except:
+            msg_id = '[broken message-id]'
 
         retry_left = 2  # succeeded in APPENDING?
         imapobj = self.imapserver.acquireconnection()
